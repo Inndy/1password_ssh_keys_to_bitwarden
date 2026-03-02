@@ -2,6 +2,7 @@ import base64
 import hashlib
 import json
 import sys
+import textwrap
 import uuid
 import zipfile
 from datetime import datetime, timezone
@@ -49,12 +50,21 @@ def load_private_key(private_pem: str):
 
 
 # Convert private key to OpenSSH PEM format
+def rewrap_pem(pem_str: str, width: int = 70) -> str:
+    lines = pem_str.strip().splitlines()
+    header = lines[0]
+    footer = lines[-1]
+    b64 = ''.join(lines[1:-1])
+    return '\n'.join([header] + textwrap.wrap(b64, width) + [footer]) + '\n'
+
+
 def convert_to_openssh(key) -> str:
-    return key.private_bytes(
+    pem = key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.OpenSSH,
         encryption_algorithm=serialization.NoEncryption(),
     ).decode()
+    return rewrap_pem(pem)
 
 
 
